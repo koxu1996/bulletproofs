@@ -161,6 +161,7 @@ impl LinearProof {
         })
     }
 
+    /// TODO: Describe method.
     pub fn verify(
         &self,
         transcript: &mut Transcript,
