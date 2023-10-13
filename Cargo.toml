@@ -18,10 +18,10 @@ description = "A pure-Rust implementation of Bulletproofs using Ristretto"
 edition = "2018"
 
 [dependencies]
-curve25519-dalek = { version = "2", default-features = false, features = ["u64_backend", "serde", "alloc"] }
+curve25519-dalek = { version = "3", default-features = false, features = ["u64_backend", "alloc", "serde"] }
 subtle = { version = "2", default-features = false }
-sha3 = { version = "0.8", default-features = false }
-digest = { version = "0.8", default-features = false }
+sha3 = { version = "0.9", default-features = false }
+digest = { version = "0.9", default-features = false }
 rand_core = { version = "0.5", default-features = false, features = ["alloc"] }
 rand = { version = "0.7", default-features = false, optional = true }
 byteorder = { version = "1", default-features = false }
@@ -38,8 +38,7 @@ bincode = "1"
 rand_chacha = "0.2"
 
 [features]
-default = ["std", "avx2_backend"]
-avx2_backend = ["curve25519-dalek/avx2_backend"]
+default = ["std"]
 # yoloproofs = []
 std = ["rand", "rand/std", "thiserror"]
 
