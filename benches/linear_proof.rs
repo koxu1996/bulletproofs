@@ -2,7 +2,7 @@
 
 #[macro_use]
 extern crate criterion;
-use criterion::Criterion;
+use criterion::{Criterion, Throughput, BenchmarkId};
 
 extern crate bulletproofs;
 extern crate curve25519_dalek;
@@ -22,8 +22,13 @@ use merlin::Transcript;
 static TEST_SIZES: [usize; 5] = [64, 128, 256, 512, 1024];
 
 fn create_linear_proof_helper(c: &mut Criterion) {
-    c.bench_function_over_inputs(
-        "linear proof creation",
+    let mut group = c.benchmark_group("linear proof creation");
+
+    for &size in &TEST_SIZES {
+        group.throughput(Throughput::Elements(size as u64));
+
+        group.bench_with_input(BenchmarkId::from_parameter(size), &size,
+
         move |bench, n| {
             let mut rng = rand::thread_rng();
 
@@ -67,9 +72,10 @@ fn create_linear_proof_helper(c: &mut Criterion) {
                 )
                 .unwrap();
             })
-        },
-        TEST_SIZES,
-    );
+        });
+    }
+
+    group.finish();
 }
 
 /// Copied from src/inner_product_proof.rs
@@ -99,8 +105,13 @@ criterion_group! {
 }
 
 fn linear_verify(c: &mut Criterion) {
-    c.bench_function_over_inputs(
-        "linear proof verification",
+    let mut group = c.benchmark_group("linear proof verification");
+
+    for &size in &TEST_SIZES {
+        group.throughput(Throughput::Elements(size as u64));
+
+        group.bench_with_input(BenchmarkId::from_parameter(size), &size, 
+
         move |bench, n| {
             let bp_gens = BulletproofGens::new(*n, 1);
             let mut rng = rand::thread_rng();
@@ -155,9 +166,10 @@ fn linear_verify(c: &mut Criterion) {
                     .verify(&mut verifier_transcript, &C, &G, &F, &B, b.clone())
                     .unwrap();
             });
-        },
-        TEST_SIZES,
-    );
+        });
+    };
+
+    group.finish();
 }
 
 criterion_group! {

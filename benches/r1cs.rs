@@ -2,7 +2,7 @@
 
 #[macro_use]
 extern crate criterion;
-use criterion::Criterion;
+use criterion::{Criterion, Throughput, BenchmarkId};
 
 // Code below copied from ../tests/r1cs.rs
 //
@@ -166,10 +166,19 @@ const MAX_SHUFFLE_SIZE: usize = 1 << LG_MAX_SHUFFLE_SIZE;
 fn bench_kshuffle_prove(c: &mut Criterion) {
     // Construct Bulletproof generators externally
     let pc_gens = PedersenGens::default();
-    let bp_gens = BulletproofGens::new(2 * MAX_SHUFFLE_SIZE, 1);
 
-    c.bench_function_over_inputs(
-        "k-shuffle proof creation",
+    let mut group = c.benchmark_group("k-shuffle proof creation");
+
+    let TEST_SIZES = (1..=LG_MAX_SHUFFLE_SIZE)
+    .map(|i| 1 << i)
+        .collect::<Vec<_>>();
+
+    for &size in &TEST_SIZES {
+        let bp_gens = BulletproofGens::new(2 * MAX_SHUFFLE_SIZE, 1);
+        group.throughput(Throughput::Elements(size as u64));
+
+        group.bench_with_input(BenchmarkId::from_parameter(size), &size,
+
         move |b, k| {
             // Generate inputs and outputs to kshuffle
             let mut rng = rand::thread_rng();
@@ -186,11 +195,10 @@ fn bench_kshuffle_prove(c: &mut Criterion) {
                 ShuffleProof::prove(&pc_gens, &bp_gens, &mut prover_transcript, &input, &output)
                     .unwrap();
             })
-        },
-        (1..=LG_MAX_SHUFFLE_SIZE)
-            .map(|i| 1 << i)
-            .collect::<Vec<_>>(),
-    );
+        });
+    }
+
+    group.finish();
 }
 
 criterion_group! {
@@ -205,10 +213,19 @@ criterion_group! {
 fn bench_kshuffle_verify(c: &mut Criterion) {
     // Construct Bulletproof generators externally
     let pc_gens = PedersenGens::default();
-    let bp_gens = BulletproofGens::new(2 * MAX_SHUFFLE_SIZE, 1);
 
-    c.bench_function_over_inputs(
-        "k-shuffle proof verification",
+    let mut group = c.benchmark_group("k-shuffle proof verification");
+
+    let TEST_SIZES = (1..=LG_MAX_SHUFFLE_SIZE)
+    .map(|i| 1 << i)
+    .collect::<Vec<_>>();
+
+    for &size in &TEST_SIZES {
+        let bp_gens = BulletproofGens::new(2 * MAX_SHUFFLE_SIZE, 1);
+        group.throughput(Throughput::Elements(size as u64));
+
+        group.bench_with_input(BenchmarkId::from_parameter(size), &size,
+
         move |b, k| {
             // Generate the proof in its own scope to prevent reuse of
             // prover variables by the verifier
@@ -241,11 +258,10 @@ fn bench_kshuffle_verify(c: &mut Criterion) {
                     )
                     .unwrap();
             })
-        },
-        (1..=LG_MAX_SHUFFLE_SIZE)
-            .map(|i| 1 << i)
-            .collect::<Vec<_>>(),
-    );
+        });
+    }
+
+    group.finish();
 }
 
 criterion_group! {

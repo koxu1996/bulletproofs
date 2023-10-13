@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 #[macro_use]
 extern crate criterion;
-use criterion::Criterion;
+use criterion::{Criterion, BenchmarkId, Throughput};
 
 use rand;
 use rand::Rng;
@@ -18,9 +18,13 @@ static AGGREGATION_SIZES: [usize; 6] = [1, 2, 4, 8, 16, 32];
 fn create_aggregated_rangeproof_helper(n: usize, c: &mut Criterion) {
     let label = format!("Aggregated {}-bit rangeproof creation", n);
 
-    c.bench_function_over_inputs(
-        &label,
-        move |b, &&m| {
+    let mut group = c.benchmark_group(label);
+
+    for &size in &AGGREGATION_SIZES {
+        group.throughput(Throughput::Elements(size as u64));
+
+        group.bench_with_input(BenchmarkId::from_parameter(size), &size,
+            move |b, &m| {
             let pc_gens = PedersenGens::default();
             let bp_gens = BulletproofGens::new(n, m);
             let mut rng = rand::thread_rng();
@@ -42,9 +46,10 @@ fn create_aggregated_rangeproof_helper(n: usize, c: &mut Criterion) {
                     n,
                 )
             })
-        },
-        &AGGREGATION_SIZES,
-    );
+        });
+    }
+
+    group.finish();
 }
 
 fn create_aggregated_rangeproof_n_8(c: &mut Criterion) {
@@ -66,9 +71,14 @@ fn create_aggregated_rangeproof_n_64(c: &mut Criterion) {
 fn verify_aggregated_rangeproof_helper(n: usize, c: &mut Criterion) {
     let label = format!("Aggregated {}-bit rangeproof verification", n);
 
-    c.bench_function_over_inputs(
-        &label,
-        move |b, &&m| {
+    let mut group = c.benchmark_group(label);
+
+    for &size in &AGGREGATION_SIZES {
+        group.throughput(Throughput::Elements(size as u64));
+
+        group.bench_with_input(BenchmarkId::from_parameter(size), &size,
+
+        move |b, &m| {
             let pc_gens = PedersenGens::default();
             let bp_gens = BulletproofGens::new(n, m);
             let mut rng = rand::thread_rng();
@@ -94,9 +104,10 @@ fn verify_aggregated_rangeproof_helper(n: usize, c: &mut Criterion) {
 
                 proof.verify_multiple(&bp_gens, &pc_gens, &mut transcript, &value_commitments, n)
             });
-        },
-        &AGGREGATION_SIZES,
-    );
+        });
+    }
+
+    group.finish();  
 }
 
 fn verify_aggregated_rangeproof_n_8(c: &mut Criterion) {
