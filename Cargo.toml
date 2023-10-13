@@ -30,6 +30,8 @@ serde_derive = { version = "1", default-features = false }
 thiserror = { version = "1", optional = true }
 merlin = { version = "3", default-features = false }
 clear_on_drop = { version = "0.2", default-features = false, features = [] }
+zkinterface = { version = "1.3", optional = true }
+bincode = { version = "1", optional = true }
 
 [dev-dependencies]
 hex = "0.4"
@@ -38,8 +40,8 @@ bincode = "1"
 rand_chacha = "0.3"
 
 [features]
-default = ["std"]
-yoloproofs = []
+default = ["std", "yoloproofs"]
+yoloproofs = ["zkinterface", "bincode"]
 std = ["rand", "rand/std", "thiserror"]
 
 [[test]]
