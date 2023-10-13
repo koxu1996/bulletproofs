@@ -133,7 +133,7 @@ impl LinearProof {
                 b_L[i] = b_L[i] + x_j * b_R[i];
                 // G_L = G_L + x_j * G_R
                 G_L[i] = RistrettoPoint::vartime_multiscalar_mul(
-                    &[Scalar::one(), x_j],
+                    &[Scalar::ONE, x_j],
                     &[G_L[i], G_R[i]],
                 );
             }
@@ -301,7 +301,7 @@ impl LinearProof {
         let lg_n = self.L_vec.len();
 
         let mut s = Vec::with_capacity(n);
-        s.push(Scalar::one());
+        s.push(Scalar::ONE);
         for i in 1..n {
             let lg_i = (32 - 1 - (i as u32).leading_zeros()) as usize;
             let k = 1 << lg_i;
@@ -392,10 +392,10 @@ impl LinearProof {
 
         let pos = 2 * lg_n * 32;
         let S = CompressedRistretto(read32(&slice[pos..]));
-        let a = Scalar::from_canonical_bytes(read32(&slice[pos + 32..]))
-            .ok_or(ProofError::FormatError)?;
-        let r = Scalar::from_canonical_bytes(read32(&slice[pos + 64..]))
-            .ok_or(ProofError::FormatError)?;
+        let a: Option<Scalar> = Scalar::from_canonical_bytes(read32(&slice[pos + 32..])).into();
+        let a = a.ok_or(ProofError::FormatError)?;
+        let r: Option<Scalar> = Scalar::from_canonical_bytes(read32(&slice[pos + 64..])).into();
+        let r  = r.ok_or(ProofError::FormatError)?;
 
         Ok(LinearProof {
             L_vec,

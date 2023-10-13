@@ -6,7 +6,7 @@ extern crate alloc;
 extern crate rand;
 
 #[cfg(feature = "std")]
-use self::rand::thread_rng;
+pub use rand::thread_rng;
 use alloc::vec::Vec;
 
 use core::iter;
@@ -419,7 +419,7 @@ impl RangeProof {
         let basepoint_scalar = w * (self.t_x - a * b) + c * (delta(n, m, &y, &z) - self.t_x);
 
         let mega_check = RistrettoPoint::optional_multiscalar_mul(
-            iter::once(Scalar::one())
+            iter::once(Scalar::ONE)
                 .chain(iter::once(x))
                 .chain(iter::once(c * x))
                 .chain(iter::once(c * x * x))
@@ -516,12 +516,12 @@ impl RangeProof {
         let T_1 = CompressedRistretto(read32(&slice[2 * 32..]));
         let T_2 = CompressedRistretto(read32(&slice[3 * 32..]));
 
-        let t_x = Scalar::from_canonical_bytes(read32(&slice[4 * 32..]))
-            .ok_or(ProofError::FormatError)?;
-        let t_x_blinding = Scalar::from_canonical_bytes(read32(&slice[5 * 32..]))
-            .ok_or(ProofError::FormatError)?;
-        let e_blinding = Scalar::from_canonical_bytes(read32(&slice[6 * 32..]))
-            .ok_or(ProofError::FormatError)?;
+        let t_x: Option<Scalar> = Scalar::from_canonical_bytes(read32(&slice[4 * 32..])).into();
+        let t_x = t_x.ok_or(ProofError::FormatError)?;
+        let t_x_blinding: Option<Scalar> = Scalar::from_canonical_bytes(read32(&slice[5 * 32..])).into();
+        let t_x_blinding = t_x_blinding.ok_or(ProofError::FormatError)?;
+        let e_blinding: Option<Scalar> = Scalar::from_canonical_bytes(read32(&slice[6 * 32..])).into();
+        let e_blinding = e_blinding.ok_or(ProofError::FormatError)?;
 
         let ipp_proof = InnerProductProof::from_bytes(&slice[7 * 32..])?;
 
@@ -611,9 +611,9 @@ mod tests {
         // code copied from previous implementation
         let z2 = z * z;
         let z3 = z2 * z;
-        let mut power_g = Scalar::zero();
-        let mut exp_y = Scalar::one(); // start at y^0 = 1
-        let mut exp_2 = Scalar::one(); // start at 2^0 = 1
+        let mut power_g = Scalar::ZERO;
+        let mut exp_y = Scalar::ONE; // start at y^0 = 1
+        let mut exp_2 = Scalar::ONE; // start at 2^0 = 1
         for _ in 0..n {
             power_g += (z - z2) * exp_y - z3 * exp_2;
 
@@ -650,7 +650,7 @@ mod tests {
 
             // 0. Create witness data
             let (min, max) = (0u64, ((1u128 << n) - 1) as u64);
-            let values: Vec<u64> = (0..m).map(|_| rng.gen_range(min, max)).collect();
+            let values: Vec<u64> = (0..m).map(|_| rng.gen_range(min..max)).collect();
             let blindings: Vec<Scalar> = (0..m).map(|_| Scalar::random(&mut rng)).collect();
 
             // 1. Create the proof
@@ -832,7 +832,7 @@ mod tests {
             dealer.receive_poly_commitments(vec![poly_com0]).unwrap();
 
         // But now simulate a malicious dealer choosing x = 0
-        poly_challenge.x = Scalar::zero();
+        poly_challenge.x = Scalar::ZERO;
 
         let maybe_share0 = party0.apply_challenge(&poly_challenge);
 

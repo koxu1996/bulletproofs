@@ -78,8 +78,8 @@ impl<'t> ConstraintSystem for Verifier<'t> {
         let o_var = Variable::MultiplierOutput(var);
 
         // Constrain l,r,o:
-        left.terms.push((l_var, -Scalar::one()));
-        right.terms.push((r_var, -Scalar::one()));
+        left.terms.push((l_var, -Scalar::ONE));
+        right.terms.push((r_var, -Scalar::ONE));
         self.constrain(left);
         self.constrain(right);
 
@@ -264,11 +264,11 @@ impl<'t> Verifier<'t> {
         let n = self.num_vars;
         let m = self.V.len();
 
-        let mut wL = vec![Scalar::zero(); n];
-        let mut wR = vec![Scalar::zero(); n];
-        let mut wO = vec![Scalar::zero(); n];
-        let mut wV = vec![Scalar::zero(); m];
-        let mut wc = Scalar::zero();
+        let mut wL = vec![Scalar::ZERO; n];
+        let mut wR = vec![Scalar::ZERO; n];
+        let mut wO = vec![Scalar::ZERO; n];
+        let mut wV = vec![Scalar::ZERO; m];
+        let mut wc = Scalar::ZERO;
 
         let mut exp_z = *z;
         for lc in self.constraints.iter() {
@@ -414,12 +414,12 @@ impl<'t> Verifier<'t> {
             .into_iter()
             .zip(y_inv_vec.iter())
             .map(|(wRi, exp_y_inv)| wRi * exp_y_inv)
-            .chain(iter::repeat(Scalar::zero()).take(pad))
+            .chain(iter::repeat(Scalar::ZERO).take(pad))
             .collect::<Vec<Scalar>>();
 
         let delta = inner_product(&yneg_wR[0..n], &wL);
 
-        let u_for_g = iter::repeat(Scalar::one())
+        let u_for_g = iter::repeat(Scalar::ONE)
             .take(n1)
             .chain(iter::repeat(u).take(n2 + pad));
         let u_for_h = u_for_g.clone();
@@ -435,10 +435,10 @@ impl<'t> Verifier<'t> {
             .iter()
             .zip(u_for_h)
             .zip(s.iter().rev().take(padded_n))
-            .zip(wL.into_iter().chain(iter::repeat(Scalar::zero()).take(pad)))
-            .zip(wO.into_iter().chain(iter::repeat(Scalar::zero()).take(pad)))
+            .zip(wL.into_iter().chain(iter::repeat(Scalar::ZERO).take(pad)))
+            .zip(wO.into_iter().chain(iter::repeat(Scalar::ZERO).take(pad)))
             .map(|((((y_inv_i, u_or_1), s_i_inv), wLi), wOi)| {
-                u_or_1 * (y_inv_i * (x * wLi + wOi - b * s_i_inv) - Scalar::one())
+                u_or_1 * (y_inv_i * (x * wLi + wOi - b * s_i_inv) - Scalar::ONE)
             });
 
         // Create a `TranscriptRng` from the transcript. The verifier
