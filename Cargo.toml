@@ -16,7 +16,7 @@ curve25519-dalek = { version = "2", features = ["u64_backend", "serde", "alloc"]
 subtle = "2"
 sha3 = "0.8"
 digest = "0.8"
-rand = "0.7"
+rand = { package = "casper_rand", git = "https://gitlab.com/andrzej1_1/casper-rand", tag = "0.7.3" }
 byteorder = "1"
 serde = "1"
 serde_derive = "1"
